@@ -156,16 +156,21 @@ reportStart :: Location -> Expression -> String -> Report ()
 reportStart loc expression testType = do
   verboseReport (printf "### Started execution at %s.\n### %s:\n%s" (show loc) testType expression)
 
+reportProblem :: String -> Location -> Expression -> Report ()
+reportProblem kind loc expression = do
+  ReportState _ _ _ (Summary total cur _ _) <- get
+  report (printf "[%d/%d] %s: %s in expression `%s'" cur total (show loc) kind expression)
+
 reportFailure :: Location -> Expression -> [String] -> Report ()
 reportFailure loc expression err = do
-  report (printf "%s: failure in expression `%s'" (show loc) expression)
+  reportProblem "failure" loc expression
   mapM_ report err
   report ""
   updateSummary (Summary 0 1 0 1)
 
 reportError :: Location -> Expression -> String -> Report ()
 reportError loc expression err = do
-  report (printf "%s: error in expression `%s'" (show loc) expression)
+  reportProblem "error" loc expression
   report err
   report ""
   updateSummary (Summary 0 1 1 0)
